@@ -1,36 +1,27 @@
-# Master Morse Web
+# Master Morse Web v2
 
-**Interactive web version of the beautiful Master Morse Code learning device.**
+**Major improvements over v1** — now even closer to the original Flowarmth device.
 
-Recreated with love as a fully functional web app featuring:
+### What's new in v2
+- ✅ **Corrected Morse tree** — accurate connections matching the physical device
+- ✅ **Visual navigation** — tree highlights current position while using DOT/DASH buttons
+- ✅ **Integrated Send controls** — DOT & DASH buttons are now inside the device view (always visible with tree)
+- ✅ **Copy button** in Encode/Decode result
+- ✅ **Practice mode fix** — letter is revealed **only after** you guess correctly
+- ✅ **Full Settings modal** (gear icon)
+  - Speed (WPM)
+  - Pitch (Hz)
+  - Volume
+  - Auto-play test on change
+  - Saved to localStorage + Reset button
 
-- 📡 **Visual Morse Code Tree** — Click any letter to hear its code and see it highlighted
-- 🎹 **Send Mode** — Tap DOT / DASH buttons (or use keyboard `.` / `-`) to build and auto-decode
-- ✉️ **Encode / Decode** — Convert text to Morse and back with playback
-- 🎯 **Practice Mode** — Listen to random codes and guess the letter (with confetti!)
-- 🔊 **Realistic Audio** — Classic 650Hz sine wave beeps with adjustable speed (WPM)
-
-## Live Demo
-
+### Live Demo
 https://alexz005.github.io/master-morse-web/
 
-## How to use
+### How to switch versions
+Use the dropdown in the header (next to GitHub button).
 
-1. Open `index.html` locally or visit the GitHub Pages link
-2. Click letters on the tree → hear & see
-3. Use Send panel to practice transmitting
-4. Try Practice mode for daily training
-
-## Tech
-- Pure HTML + Tailwind CSS (CDN) + Vanilla JS
-- No dependencies, works offline
-- Responsive & beautiful on mobile/desktop
-
-## Original Inspiration
-The physical device by [Flowarmth](https://flowarmth.com) — compact, all-in-one Morse code learner.
-
-Made for fun learning. 73 de AlexZ005
+Made with ❤️ for fun Morse learning. 73!
 
 ---
-
-*This repo was automatically created and deployed by Grok.*
+*Updated automatically by Grok — v2 deployed to gh-pages*

@@ -1,27 +1,31 @@
-# Master Morse Web v2
+# Master Morse Web — v2
 
-**Major improvements over v1** — now even closer to the original Flowarmth device.
+**Major update** of the interactive Morse code trainer inspired by the original Flowarmth device.
 
-### What's new in v2
+## What's New in v2
+
 - ✅ **Corrected Morse tree** — accurate connections matching the physical device
-- ✅ **Visual navigation** — tree highlights current position while using DOT/DASH buttons
-- ✅ **Integrated Send controls** — DOT & DASH buttons are now inside the device view (always visible with tree)
-- ✅ **Copy button** in Encode/Decode result
-- ✅ **Practice mode fix** — letter is revealed **only after** you guess correctly
-- ✅ **Full Settings modal** (gear icon)
+- ✅ **Real-time navigation highlight** — watch the tree light up as you tap DOT/DASH
+- ✅ **Integrated Send controls** — always visible right under the device
+- ✅ **Copy button** for Encode/Decode results
+- ✅ **Fixed Practice mode** — letter revealed **only after** you guess
+- ✅ **Full Settings panel** (gear icon)
   - Speed (WPM)
   - Pitch (Hz)
   - Volume
-  - Auto-play test on change
+  - Auto-play on change
   - Saved to localStorage + Reset button
+- ✅ **Microphone decoder** — speak or tap Morse into your mic and watch it decode live!
+- ✅ **Version dropdown** in header (ready for future versions)
 
-### Live Demo
+## Live Demo
 https://alexz005.github.io/master-morse-web/
 
-### How to switch versions
-Use the dropdown in the header (next to GitHub button).
+## Keyboard Shortcuts
+- `.` or `,` → DOT
+- `-` or `_` → DASH
+- `R` → Reset path
+- `Space` → Play current Morse
+- `S` → Open Settings
 
-Made with ❤️ for fun Morse learning. 73!
-
----
-*Updated automatically by Grok — v2 deployed to gh-pages*
+Made with ❤️ for Morse enthusiasts. 73!

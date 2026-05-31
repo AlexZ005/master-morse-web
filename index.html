@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Morse • Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap');
+        :root { --primary: #10b981; }
+        body { font-family: 'Space Grotesk', system_ui, sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .device-frame {
+            background: linear-gradient(145deg, #18181b, #27251f);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4), 
+                       inset 0 1px 0 rgba(255,255,255,0.1),
+                       inset 0 -1px 0 rgba(0,0,0,0.3);
+            border: 12px solid #3f3f46;
+        }
+        .screen {
+            background: #0a0a0a;
+            box-shadow: inset 0 0 60px rgba(16, 185, 129, 0.08);
+        }
+        .morse-node {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .morse-node:hover {
+            transform: scale(1.15);
+            filter: brightness(1.3);
+        }
+        .morse-node.highlight {
+            fill: #10b981 !important;
+            stroke: #4ade80;
+            stroke-width: 4;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px #10b981); }
+            50% { filter: drop-shadow(0 0 20px #4ade80); }
+        }
+        .led {
+            box-shadow: 0 0 12px #10b981, inset 0 0 8px #fff;
+            animation: led-blink 0.1s ease forwards;
+        }
+        .section-title {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+        .tree-container {
+            filter: drop-shadow(0 10px 15px rgb(16 185 129 / 0.1));
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+    <div class="max-w-[1080px] mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-x-4">
+                <div class="w-11 h-11 bg-emerald-600 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-broadcast-tower text-white text-3xl"></i>
+                </div>
+                <div>
+                    <div class="text-3xl font-semibold tracking-tighter">MASTER MORSE</div>
+                    <div class="text-[10px] text-emerald-500 -mt-1 tracking-[3px] font-mono">WEB EDITION</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-x-3">
+                <a href="https://github.com/AlexZ005/master-morse-web" target="_blank" 
+                   class="flex items-center gap-x-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-2xl text-sm transition-colors">
+                    <i class="fa-brands fa-github"></i>
+                    <span class="font-medium">GitHub</span>
+                </a>
+                <div class="px-3 py-1.5 bg-zinc-900 rounded-2xl text-xs flex items-center gap-x-1.5">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="text-emerald-400 text-xs font-medium">LIVE</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device -->
+        <div class="max-w-[620px] mx-auto">
+            <div class="device-frame rounded-[3.5rem] p-3 mx-auto" style="width: 620px; max-width: 100%;">
+                <!-- Top bezel -->
+                <div class="flex items-center justify-between px-6 pt-4 pb-2">
+                    <div class="flex items-center gap-x-2">
+                        <div class="w-2.5 h-2.5 bg-zinc-700 rounded-full"></div>
+                        <div class="text-[10px] font-mono tracking-[2px] text-zinc-500">FLOWARMTH</div>
+                    </div>
+                    <div class="flex items-center gap-x-1.5">
+                        <div class="text-emerald-400">
+                            <i class="fa-solid fa-wifi text-xs"></i>
+                        </div>
+                        <div class="text-[10px] font-mono text-emerald-400">CONNECTED</div>
+                    </div>
+                    <div class="w-6 h-6 bg-zinc-800 rounded-full flex items-center justify-center">
+                        <div class="w-1.5 h-1.5 bg-zinc-600 rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Screen -->
+                <div class="screen rounded-[2.25rem] p-5 border border-zinc-800">
+                    <!-- Screen Header -->
+                    <div class="flex items-center justify-between mb-5 px-1">
+                        <div>
+                            <div class="font-mono text-emerald-400 text-xl tracking-[4px] font-bold">MORSE CODE</div>
+                            <div class="text-[9px] text-zinc-500 -mt-0.5">INTERACTIVE TREE • 26 LETTERS</div>
+                        </div>
+                        <div class="flex items-center gap-x-px">
+                            <div class="w-8 h-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
+                            <div class="px-2">
+                                <i class="fa-solid fa-satellite text-emerald-500 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Morse Tree SVG -->
+                    <div class="tree-container bg-zinc-950 rounded-3xl p-3 border border-zinc-800">
+                        <svg id="morse-svg" width="100%" height="380" viewBox="0 0 520 380" class="mx-auto"></svg>
+                    </div>
+
+                    <!-- Current Selection -->
+                    <div class="mt-5 flex items-center justify-center gap-x-5">
+                        <div class="text-center">
+                            <div class="text-xs text-zinc-500 mb-1 tracking-widest">CURRENT</div>
+                            <div id="current-letter" 
+                                 class="text-[72px] leading-none font-black text-white mono transition-all duration-300"
+                                 style="font-feature-settings: 'ss02';">—</div>
+                        </div>
+                        <div class="text-center pt-2">
+                            <div id="current-morse" 
+                                 class="text-4xl text-emerald-400 mono tracking-[6px] font-medium min-w-[140px] text-left">— — —</div>
+                            <div class="text-[10px] text-zinc-500 mt-0.5">MORSE CODE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom controls -->
+                <div class="px-6 pt-4 pb-3 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-x-2 text-zinc-400">
+                        <i class="fa-solid fa-volume-up"></i>
+                        <span class="font-mono text-[10px]">650Hz</span>
+                    </div>
+                    <div onclick="adjustSpeed()" class="cursor-pointer flex items-center gap-x-1.5 text-emerald-400 hover:text-emerald-300">
+                        <span class="font-mono text-xs">SPEED</span>
+                        <span id="speed-value" class="font-bold mono">18</span>
+                        <span class="text-[10px]">WPM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Panels -->
+        <div class="max-w-[620px] mx-auto mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
+            
+            <!-- SEND PANEL -->
+            <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800">
+                <div class="flex items-center gap-x-3 mb-5">
+                    <div class="w-9 h-9 bg-orange-500/10 text-orange-400 rounded-2xl flex items-center justify-center">
+                        <i class="fa-solid fa-hand-paper text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="section-title text-orange-400">SEND MODE</div>
+                        <div class="text-sm text-zinc-400">Tap to transmit</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="sendDot()"
+                            class="group active:scale-[0.985] transition-all bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-orange-500 rounded-2xl py-6 flex flex-col items-center justify-center">
+                        <div class="text-5xl text-orange-400 group-active:text-orange-300">•</div>
+                        <div class="text-xs tracking-widest mt-1 text-zinc-400">DOT</div>
+                    </button>
+                    <button onclick="sendDash()"
+                            class="group active:scale-[0.985] transition-all bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-amber-500 rounded-2xl py-6 flex flex-col items-center justify-center">
+                        <div class="text-5xl text-amber-400 group-active:text-amber-300">−</div>
+                        <div class="text-xs tracking-widest mt-1 text-zinc-400">DASH</div>
+                    </button>
+                </div>
+
+                <div class="flex gap-3 mt-4">
+                    <button onclick="resetSend()" 
+                            class="flex-1 py-3 text-sm font-medium bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">
+                        RESET
+                    </button>
+                    <button onclick="playCurrent()" 
+                            class="flex-1 py-3 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl transition-colors flex items-center justify-center gap-x-2">
+                        <i class="fa-solid fa-play mr-1"></i> 
+                        PLAY
+                    </button>
+                </div>
+                <div class="text-center mt-3">
+                    <div class="inline-flex items-center text-xs text-zinc-500">
+                        <i class="fa-solid fa-info-circle mr-1.5"></i>
+                        Auto-decodes on match
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENCODE / DECODE -->
+            <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800">
+                <div class="flex items-center gap-x-3 mb-5">
+                    <div class="w-9 h-9 bg-sky-500/10 text-sky-400 rounded-2xl flex items-center justify-center">
+                        <i class="fa-solid fa-exchange-alt text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="section-title text-sky-400">ENCODE / DECODE</div>
+                        <div class="text-sm text-zinc-400">Text ↔ Morse</div>
+                    </div>
+                </div>
+
+                <textarea id="text-input" rows="3" placeholder="Type your message..." 
+                          class="w-full bg-zinc-950 border border-zinc-700 focus:border-sky-500 rounded-2xl p-4 text-sm mono resize-y"></textarea>
+
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <button onclick="encodeText()" 
+                            class="py-3 text-sm font-medium bg-zinc-800 hover:bg-white hover:text-zinc-950 rounded-2xl transition-all active:scale-[0.985]">
+                        TEXT → MORSE
+                    </button>
+                    <button onclick="decodeMorse()" 
+                            class="py-3 text-sm font-medium bg-zinc-800 hover:bg-white hover:text-zinc-950 rounded-2xl transition-all active:scale-[0.985]">
+                        MORSE → TEXT
+                    </button>
+                </div>
+
+                <div id="morse-output" 
+                     class="mt-4 min-h-[52px] bg-black rounded-2xl p-4 text-emerald-400 mono text-sm break-all border border-zinc-800">
+                    Your Morse will appear here
+                </div>
+
+                <button onclick="playMorseFromOutput()" 
+                        class="mt-3 w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold rounded-2xl flex items-center justify-center gap-x-2 transition-colors">
+                    <i class="fa-solid fa-play"></i>
+                    <span>PLAY THIS MORSE</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- PRACTICE -->
+        <div class="max-w-[620px] mx-auto mt-5 bg-zinc-900 rounded-3xl p-6 border border-zinc-800">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-x-3">
+                    <div class="w-9 h-9 bg-violet-500/10 text-violet-400 rounded-2xl flex items-center justify-center">
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="section-title text-violet-400">PRACTICE MODE</div>
+                        <div class="text-sm text-zinc-400">Listen • Guess • Master</div>
+                    </div>
+                </div>
+                <button onclick="startPractice()" 
+                        class="px-5 py-2 bg-white text-zinc-950 text-sm font-semibold rounded-2xl flex items-center gap-x-2 active:scale-95 transition-transform">
+                    <span>NEW CHALLENGE</span>
+                </button>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="flex-1 text-center">
+                    <div class="text-xs text-zinc-500 mb-2">LISTEN TO THE CODE</div>
+                    <div id="practice-display" 
+                         class="text-[92px] font-black text-white/10 mono select-none transition-all">?</div>
+                    <button onclick="replayPractice()" 
+                            class="mt-2 text-xs px-4 py-1 bg-zinc-800 rounded-full text-emerald-400 hover:bg-emerald-900 transition-colors">
+                        <i class="fa-solid fa-redo mr-1"></i> REPLAY
+                    </button>
+                </div>
+
+                <div class="flex-1">
+                    <div class="text-xs text-zinc-500 mb-2 px-1">CHOOSE THE LETTER</div>
+                    <div id="guess-grid" class="grid grid-cols-4 gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div id="practice-feedback" class="mt-3 text-center text-sm h-5 font-medium"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-10 text-xs text-zinc-500">
+            Recreated with ❤️ as a web app • Inspired by the original Master Morse Code device by Flowarmth<br>
+            <span class="font-mono">Tap nodes • Send with buttons • Practice daily</span>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#10b981');
+        }
+
+        let audioContext;
+        let dotDuration = 80; // ms
+        let currentSendCode = '';
+        let currentPracticeLetter = '';
+        let currentPracticeMorse = '';
+        let speedWPM = 18;
+
+        const MORSE = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 
+            'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
+            'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---',
+            'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+            'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..'
+        };
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playBeep(durationMs, freq = 650) {
+            initAudio();
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            filter.type = 'lowpass';
+            filter.frequency.value = 1400;
+
+            gain.gain.value = 0.35;
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioContext.destination);
+
+            osc.start();
+
+            setTimeout(() => {
+                gain.gain.linearRampToValueAtTime(0.00001, audioContext.currentTime + 0.08);
+                setTimeout(() => {
+                    osc.stop();
+                    osc.disconnect();
+                }, 120);
+            }, durationMs);
+        }
+
+        function playMorse(morseCode, onComplete = null) {
+            if (!morseCode) return;
+            initAudio();
+
+            let time = 0;
+            const gap = dotDuration * 0.7;
+            const letterGap = dotDuration * 2.5;
+
+            for (let i = 0; i < morseCode.length; i++) {
+                const char = morseCode[i];
+                const isDot = char === '.';
+                const len = isDot ? dotDuration : dotDuration * 3;
+
+                setTimeout(() => {
+                    playBeep(len);
+                    // Visual feedback on LED if exists
+                    flashLED();
+                }, time);
+
+                time += len + gap;
+            }
+
+            if (onComplete) {
+                setTimeout(onComplete, time + 200);
+            }
+        }
+
+        function flashLED() {
+            const led = document.createElement('div');
+            led.className = 'fixed top-4 right-4 w-3 h-3 bg-emerald-400 rounded-full led z-50';
+            document.body.appendChild(led);
+            setTimeout(() => led.remove(), 180);
+        }
+
+        // Create beautiful Morse tree
+        function createMorseTree() {
+            const svg = document.getElementById('morse-svg');
+            svg.innerHTML = '';
+
+            const nodeData = {
+                'O': {x: 68, y: 48, morse: '---'},
+                'M': {x: 128, y: 48, morse: '--'},
+                'T': {x: 188, y: 48, morse: '-'},
+                'E': {x: 312, y: 48, morse: '.'},
+                'I': {x: 362, y: 48, morse: '..'},
+                'S': {x: 412, y: 48, morse: '...'},
+                'H': {x: 462, y: 48, morse: '....'},
+                'Q': {x: 48, y: 128, morse: '--.-'},
+                'G': {x: 108, y: 128, morse: '--.'},
+                'Z': {x: 168, y: 128, morse: '--..'},
+                'U': {x: 322, y: 128, morse: '..-'},
+                'V': {x: 382, y: 128, morse: '...-'},
+                'F': {x: 442, y: 128, morse: '..-.'},
+                'Y': {x: 68, y: 208, morse: '-.--'},
+                'K': {x: 128, y: 208, morse: '-.-'},
+                'N': {x: 188, y: 208, morse: '-.'},
+                'A': {x: 312, y: 208, morse: '.-'},
+                'R': {x: 372, y: 208, morse: '.-.'},
+                'L': {x: 432, y: 208, morse: '.-..'},
+                'C': {x: 108, y: 288, morse: '-.-.'},
+                'D': {x: 188, y: 288, morse: '-..'},
+                'W': {x: 312, y: 288, morse: '.--'},
+                'P': {x: 372, y: 288, morse: '.--.'},
+                'X': {x: 68, y: 348, morse: '-..-'},
+                'B': {x: 128, y: 348, morse: '-...'},
+                'J': {x: 432, y: 348, morse: '.---'}
+            };
+
+            // Connections (approximated to look like the original device)
+            const connections = [
+                // Top row from imaginary root
+                {x1: 265, y1: 22, x2: 68, y2: 30},
+                {x1: 265, y1: 22, x2: 128, y2: 30},
+                {x1: 265, y1: 22, x2: 188, y2: 30},
+                {x1: 265, y1: 22, x2: 312, y2: 30},
+                {x1: 265, y1: 22, x2: 362, y2: 30},
+                {x1: 265, y1: 22, x2: 412, y2: 30},
+                {x1: 265, y1: 22, x2: 462, y2: 30},
+                // Second level
+                {x1: 68, y1: 66, x2: 48, y2: 110},
+                {x1: 128, y1: 66, x2: 108, y2: 110},
+                {x1: 188, y1: 66, x2: 168, y2: 110},
+                {x1: 312, y1: 66, x2: 322, y2: 110},
+                {x1: 362, y1: 66, x2: 382, y2: 110},
+                {x1: 412, y1: 66, x2: 442, y2: 110},
+                // Third level
+                {x1: 48, y1: 146, x2: 68, y2: 190},
+                {x1: 108, y1: 146, x2: 128, y2: 190},
+                {x1: 168, y1: 146, x2: 188, y2: 190},
+                {x1: 322, y1: 146, x2: 312, y2: 190},
+                {x1: 382, y1: 146, x2: 372, y2: 190},
+                {x1: 442, y1: 146, x2: 432, y2: 190},
+                // Fourth level
+                {x1: 128, y1: 226, x2: 108, y2: 270},
+                {x1: 188, y1: 226, x2: 188, y2: 270},
+                {x1: 312, y1: 226, x2: 312, y2: 270},
+                {x1: 372, y1: 226, x2: 372, y2: 270},
+                // Bottom
+                {x1: 108, y1: 306, x2: 68, y2: 330},
+                {x1: 188, y1: 306, x2: 128, y2: 330},
+                {x1: 432, y1: 226, x2: 432, y2: 330}
+            ];
+
+            // Draw connections first (behind)
+            connections.forEach((conn, i) => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', conn.x1);
+                line.setAttribute('y1', conn.y1);
+                line.setAttribute('x2', conn.x2);
+                line.setAttribute('y2', conn.y2);
+                line.setAttribute('stroke', '#334155');
+                line.setAttribute('stroke-width', '2.5');
+                line.setAttribute('stroke-linecap', 'round');
+                line.setAttribute('id', `conn-${i}`);
+                svg.appendChild(line);
+            });
+
+            // Draw nodes
+            Object.entries(nodeData).forEach(([letter, pos]) => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('id', `group-${letter}`);
+
+                // Glow circle (subtle)
+                const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                glow.setAttribute('cx', pos.x);
+                glow.setAttribute('cy', pos.y);
+                glow.setAttribute('r', '24');
+                glow.setAttribute('fill', 'none');
+                glow.setAttribute('stroke', '#166534');
+                glow.setAttribute('stroke-width', '1');
+                g.appendChild(glow);
+
+                // Main node
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', '17');
+                circle.setAttribute('fill', '#18181b');
+                circle.setAttribute('stroke', '#4ade80');
+                circle.setAttribute('stroke-width', '2.5');
+                circle.setAttribute('id', `node-${letter}`);
+                circle.style.cursor = 'pointer';
+                circle.onclick = () => selectLetter(letter);
+                g.appendChild(circle);
+
+                // Letter
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y + 5.5);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#e2e8f0');
+                text.setAttribute('font-size', '15.5');
+                text.setAttribute('font-weight', '700');
+                text.setAttribute('font-family', 'JetBrains Mono, monospace');
+                text.textContent = letter;
+                text.style.pointerEvents = 'none';
+                g.appendChild(text);
+
+                svg.appendChild(g);
+            });
+
+            // Small decorative dots on some connections (like original)
+            const dots = [
+                {x: 265, y: 22}, {x: 108, y: 110}, {x: 322, y: 110}
+            ];
+            dots.forEach(d => {
+                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', d.x);
+                dot.setAttribute('cy', d.y);
+                dot.setAttribute('r', '2.5');
+                dot.setAttribute('fill', '#475569');
+                svg.appendChild(dot);
+            });
+        }
+
+        function highlightNode(letter, duration = 1800) {
+            const node = document.getElementById(`node-${letter}`);
+            if (!node) return;
+
+            node.classList.add('highlight');
+            setTimeout(() => {
+                node.classList.remove('highlight');
+            }, duration);
+        }
+
+        function selectLetter(letter) {
+            const morse = MORSE[letter];
+            if (!morse) return;
+
+            // Update UI
+            document.getElementById('current-letter').textContent = letter;
+            document.getElementById('current-morse').textContent = morse;
+
+            // Highlight & sound
+            highlightNode(letter);
+            playMorse(morse);
+
+            // Brief flash on tree container
+            const container = document.querySelector('.tree-container');
+            container.style.boxShadow = '0 0 30px rgb(16 185 129 / 0.4)';
+            setTimeout(() => {
+                container.style.boxShadow = '0 10px 15px rgb(16 185 129 / 0.1)';
+            }, 600);
+        }
+
+        // SEND MODE
+        function sendDot() {
+            currentSendCode += '.';
+            updateSendUI();
+            checkAutoDecode();
+        }
+
+        function sendDash() {
+            currentSendCode += '-';
+            updateSendUI();
+            checkAutoDecode();
+        }
+
+        function updateSendUI() {
+            document.getElementById('current-morse').textContent = currentSendCode || '— — —';
+            if (currentSendCode.length > 0) {
+                document.getElementById('current-letter').textContent = '…';
+            }
+        }
+
+        function checkAutoDecode() {
+            for (const [letter, code] of Object.entries(MORSE)) {
+                if (code === currentSendCode) {
+                    document.getElementById('current-letter').textContent = letter;
+                    highlightNode(letter, 2200);
+                    // Play the full code
+                    setTimeout(() => playMorse(currentSendCode), 120);
+                    return;
+                }
+            }
+        }
+
+        function resetSend() {
+            currentSendCode = '';
+            document.getElementById('current-letter').textContent = '—';
+            document.getElementById('current-morse').textContent = '— — —';
+        }
+
+        function playCurrent() {
+            const morse = document.getElementById('current-morse').textContent.trim();
+            if (morse && morse !== '— — —') {
+                playMorse(morse.replace(/ /g, ''));
+            }
+        }
+
+        // ENCODE / DECODE
+        function encodeText() {
+            const input = document.getElementById('text-input').value.toUpperCase().trim();
+            if (!input) return;
+
+            let result = '';
+            for (const char of input) {
+                if (MORSE[char]) {
+                    result += MORSE[char] + ' ';
+                } else if (char === ' ') {
+                    result += ' / ';
+                }
+            }
+            document.getElementById('morse-output').innerHTML = result.trim() || 'No valid letters';
+        }
+
+        function decodeMorse() {
+            const input = document.getElementById('text-input').value.trim();
+            if (!input) return;
+
+            const parts = input.split(/\s+/);
+            let result = '';
+            for (const part of parts) {
+                if (part === '/' || part === '') {
+                    result += ' ';
+                    continue;
+                }
+                let found = false;
+                for (const [letter, code] of Object.entries(MORSE)) {
+                    if (code === part) {
+                        result += letter;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) result += '?';
+            }
+            document.getElementById('morse-output').innerHTML = result || 'No match';
+        }
+
+        function playMorseFromOutput() {
+            const output = document.getElementById('morse-output').textContent.trim();
+            if (!output || output === 'Your Morse will appear here') return;
+
+            // Clean and play
+            const clean = output.replace(/\//g, ' ').replace(/\s+/g, ' ').trim();
+            const codes = clean.split(' ');
+            let time = 0;
+
+            codes.forEach((code, idx) => {
+                if (!code) return;
+                setTimeout(() => {
+                    playMorse(code);
+                }, time);
+                time += (code.length * (dotDuration * 1.2)) + 400;
+            });
+        }
+
+        // PRACTICE MODE
+        let practiceTimeout = null;
+
+        function startPractice() {
+            const letters = Object.keys(MORSE);
+            currentPracticeLetter = letters[Math.floor(Math.random() * letters.length)];
+            currentPracticeMorse = MORSE[currentPracticeLetter];
+
+            // Update display
+            const display = document.getElementById('practice-display');
+            display.textContent = '?';
+            display.style.color = '#27251f';
+            document.getElementById('practice-feedback').innerHTML = '';
+
+            // Play the morse after short delay
+            setTimeout(() => {
+                playMorse(currentPracticeMorse, () => {
+                    display.style.color = '#a1a1aa';
+                    display.textContent = currentPracticeLetter;  // reveal after sound? No, keep hidden until guess
+                    // Actually keep ? until guessed
+                });
+            }, 280);
+
+            // Generate guess buttons
+            generateGuessButtons();
+        }
+
+        function generateGuessButtons() {
+            const container = document.getElementById('guess-grid');
+            container.innerHTML = '';
+
+            const letters = Object.keys(MORSE);
+            let options = [currentPracticeLetter];
+
+            // Add 3 random wrong
+            while (options.length < 4) {
+                const rand = letters[Math.floor(Math.random() * letters.length)];
+                if (!options.includes(rand)) options.push(rand);
+            }
+
+            // Shuffle
+            options = options.sort(() => Math.random() - 0.5);
+
+            options.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = `py-3 text-xl font-bold mono bg-zinc-800 hover:bg-zinc-700 active:bg-emerald-600 border border-zinc-700 hover:border-emerald-500 rounded-2xl transition-all`;
+                btn.textContent = letter;
+                btn.onclick = () => checkGuess(letter, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkGuess(guessed, btnElement) {
+            const feedback = document.getElementById('practice-feedback');
+            const allBtns = document.querySelectorAll('#guess-grid button');
+
+            allBtns.forEach(b => b.disabled = true);
+
+            if (guessed === currentPracticeLetter) {
+                btnElement.classList.add('!bg-emerald-600', '!border-emerald-400', 'text-white');
+                feedback.innerHTML = `<span class="text-emerald-400 font-semibold">✓ PERFECT!</span>`;
+                highlightNode(currentPracticeLetter, 1400);
+
+                // Confetti effect (simple)
+                createSimpleConfetti();
+
+                setTimeout(() => {
+                    startPractice();
+                }, 1450);
+            } else {
+                btnElement.classList.add('!bg-red-600/70', '!border-red-500');
+                feedback.innerHTML = `<span class="text-red-400">✗ It's <strong>${currentPracticeLetter}</strong></span>`;
+
+                // Show correct
+                setTimeout(() => {
+                    allBtns.forEach(b => {
+                        if (b.textContent === currentPracticeLetter) {
+                            b.classList.add('!bg-emerald-600', '!border-emerald-400');
+                        }
+                    });
+                }, 650);
+
+                setTimeout(() => {
+                    startPractice();
+                }, 1950);
+            }
+        }
+
+        function createSimpleConfetti() {
+            const colors = ['#10b981', '#4ade80', '#a3e635'];
+            for (let i = 0; i < 28; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'fixed';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.top = '-20px';
+                particle.style.width = '7px';
+                particle.style.height = '7px';
+                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.zIndex = '9999';
+                particle.style.pointerEvents = 'none';
+                particle.style.transition = 'transform 1.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 1.4s';
+                document.body.appendChild(particle);
+
+                const angle = Math.random() * 80 + 40;
+                const velocity = Math.random() * 280 + 220;
+
+                setTimeout(() => {
+                    particle.style.transform = `translateY(${velocity}px) rotate(${angle * 3}deg)`;
+                    particle.style.opacity = '0';
+                }, 40);
+
+                setTimeout(() => particle.remove(), 1600);
+            }
+        }
+
+        function replayPractice() {
+            if (currentPracticeMorse) {
+                const display = document.getElementById('practice-display');
+                display.style.color = '#27251f';
+                playMorse(currentPracticeMorse, () => {
+                    display.style.color = '#a1a1aa';
+                });
+            }
+        }
+
+        function adjustSpeed() {
+            const newSpeed = prompt('Enter new speed in WPM (10-30):', speedWPM);
+            if (newSpeed && !isNaN(newSpeed)) {
+                speedWPM = Math.max(10, Math.min(30, parseInt(newSpeed)));
+                document.getElementById('speed-value').textContent = speedWPM;
+
+                // Adjust dot duration (standard: 1200 / WPM ms for dot)
+                dotDuration = Math.round(1200 / speedWPM);
+            }
+        }
+
+        // Keyboard support
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '.' || e.key === ',') {
+                    e.preventDefault();
+                    sendDot();
+                }
+                if (e.key === '-' || e.key === '_') {
+                    e.preventDefault();
+                    sendDash();
+                }
+                if (e.key.toLowerCase() === 'r') {
+                    resetSend();
+                }
+                if (e.key === ' ' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    const current = document.getElementById('current-morse').textContent.trim();
+                    if (current && current !== '— — —') playMorse(current.replace(/ /g, ''));
+                }
+            });
+
+            // Hint
+            console.log('%c[Master Morse] Keyboard: . or , = DOT | - or _ = DASH | R = reset | Space = play', 'color:#52525b');
+        }
+
+        // Initialize everything
+        function initApp() {
+            initTailwind();
+            createMorseTree();
+            setupKeyboard();
+
+            // Set initial speed
+            document.getElementById('speed-value').textContent = speedWPM;
+            dotDuration = Math.round(1200 / speedWPM);
+
+            // Welcome animation
+            setTimeout(() => {
+                const title = document.querySelector('.device-frame');
+                if (title) title.style.boxShadow = '0 25px 50px -12px rgb(0 0 0 / 0.4), 0 0 0 1px #166534';
+                setTimeout(() => {
+                    if (title) title.style.boxShadow = '0 25px 50px -12px rgb(0 0 0 / 0.4), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3)';
+                }, 900);
+            }, 650);
+
+            // Random tip in console
+            console.log('%c[Master Morse Web] Ready! Click any letter on the tree to hear it. Try the practice mode!', 'color:#166534');
+
+            // Auto start a tiny demo hint (optional)
+            // setTimeout(() => { document.getElementById('current-letter').textContent = 'E'; }, 1200);
+        }
+
+        // Boot
+        window.onload = initApp;
+    </script>
+</body>
+</html>

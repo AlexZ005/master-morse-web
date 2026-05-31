@@ -1,5 +1,5 @@
 # Master Morse Web v3
 
-Settings fixed and fully working again.
+Tree + settings fully restored.
 
 Live: https://alexz005.github.io/master-morse-web/

@@ -243,41 +243,333 @@
         let currentPracticeLetter = ''; let currentPracticeMorse = '';
         let speedWPM = 18; let pitchHz = 650; let volumeLevel = 0.35; let autoListen = true;
 
-        const MORSE = { /* ... same as before ... */ };
-        const TREE = { /* ... same as before ... */ };
+        const MORSE = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---',
+            'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+            'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..',
+            '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '0': '-----'
+        };
+
+        const TREE = {
+            '': { left: 'E', right: 'T' },
+            'E': { left: 'I', right: 'A' }, 'T': { left: 'N', right: 'M' },
+            'I': { left: 'S', right: 'U' }, 'A': { left: 'R', right: 'W' }, 'N': { left: 'D', right: 'K' }, 'M': { left: 'G', right: 'O' },
+            'S': { left: 'H', right: 'V' }, 'U': { left: 'F', right: null }, 'R': { left: 'L', right: null }, 'W': { left: 'P', right: 'J' },
+            'D': { left: 'B', right: 'X' }, 'K': { left: 'C', right: 'Y' }, 'G': { left: 'Z', right: 'Q' }, 'O': { left: null, right: null }
+        };
 
         function initAudio() { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
 
-        function playBeep(durationMs, freq = pitchHz) { /* ... same ... */ }
-        function playMorse(morseCode, onComplete = null) { /* ... same ... */ }
-        function flashLED() { /* ... same ... */ }
+        function playBeep(durationMs, freq = pitchHz) {
+            initAudio();
+            const osc = audioContext.createOscillator(); const gain = audioContext.createGain(); const filter = audioContext.createBiquadFilter();
+            osc.type = 'sine'; osc.frequency.value = freq; filter.type = 'lowpass'; filter.frequency.value = 1400;
+            gain.gain.value = volumeLevel;
+            osc.connect(filter); filter.connect(gain); gain.connect(audioContext.destination); osc.start();
+            setTimeout(() => { gain.gain.linearRampToValueAtTime(0.00001, audioContext.currentTime + 0.08); setTimeout(() => { osc.stop(); osc.disconnect(); }, 120); }, durationMs);
+        }
 
-        function createMorseTree() { /* exact tree code from previous */ }
+        function playMorse(morseCode, onComplete = null) {
+            if (!morseCode) return; initAudio();
+            let time = 0; const gap = dotDuration * 0.65;
+            for (let i = 0; i < morseCode.length; i++) {
+                const char = morseCode[i]; const len = (char === '.') ? dotDuration : dotDuration * 3;
+                setTimeout(() => { playBeep(len); flashLED(); }, time); time += len + gap;
+            }
+            if (onComplete) setTimeout(onComplete, time + 180);
+        }
 
-        function highlightNode(letter, duration = 1500) { /* ... */ }
-        function highlightCurrentNode(letter) { /* orange current */ }
-        function clearCurrentHighlight() { /* ... */ }
+        function flashLED() {
+            const led = document.createElement('div');
+            led.className = 'fixed top-4 right-4 w-3 h-3 bg-emerald-400 rounded-full led z-50';
+            document.body.appendChild(led);
+            setTimeout(() => led.remove(), 160);
+        }
 
-        function selectLetter(letter) { /* ... */ }
+        function createMorseTree() {
+            const svg = document.getElementById('morse-svg');
+            svg.innerHTML = '';
+
+            const nodeData = {
+                'start': {x: 280, y: 22},
+                'E': {x: 140, y: 58}, 'T': {x: 420, y: 58},
+                'I': {x: 80, y: 98}, 'A': {x: 200, y: 98}, 'N': {x: 360, y: 98}, 'M': {x: 480, y: 98},
+                'S': {x: 50, y: 138}, 'U': {x: 110, y: 138}, 'R': {x: 170, y: 138}, 'W': {x: 230, y: 138},
+                'D': {x: 330, y: 138}, 'K': {x: 390, y: 138}, 'G': {x: 450, y: 138}, 'O': {x: 510, y: 138},
+                'H': {x: 30, y: 178}, 'V': {x: 70, y: 178}, 'F': {x: 110, y: 178}, 'Ü': {x: 150, y: 178},
+                'L': {x: 190, y: 178}, 'Blk': {x: 230, y: 178}, 'P': {x: 270, y: 178}, 'J': {x: 310, y: 178},
+                'B': {x: 350, y: 178}, 'X': {x: 390, y: 178}, 'C': {x: 430, y: 178}, 'Y': {x: 470, y: 178},
+                'Z': {x: 510, y: 178}, 'Q': {x: 550, y: 178},
+                '5': {x: 20, y: 218}, '4': {x: 50, y: 218}, '$': {x: 80, y: 218}, '3': {x: 110, y: 218},
+                '?': {x: 140, y: 218}, '-': {x: 170, y: 218}, '.': {x: 200, y: 218}, '2': {x: 230, y: 218},
+                ',': {x: 260, y: 218}, ':': {x: 290, y: 218}, '+': {x: 320, y: 218}, ';': {x: 350, y: 218},
+                '*': {x: 380, y: 218}, '%': {x: 410, y: 218}, '#': {x: 440, y: 218}, '1': {x: 470, y: 218},
+                '6': {x: 500, y: 218}, '=': {x: 530, y: 218}
+            };
+
+            const connections = [
+                {x1: 280, y1: 30, x2: 140, y2: 50}, {x1: 280, y1: 30, x2: 420, y2: 50},
+                {x1: 140, y1: 66, x2: 80, y2: 90}, {x1: 140, y1: 66, x2: 200, y2: 90},
+                {x1: 420, y1: 66, x2: 360, y2: 90}, {x1: 420, y1: 66, x2: 480, y2: 90},
+                {x1: 80, y1: 106, x2: 50, y2: 130}, {x1: 80, y1: 106, x2: 110, y2: 130},
+                {x1: 200, y1: 106, x2: 170, y2: 130}, {x1: 200, y1: 106, x2: 230, y2: 130},
+                {x1: 360, y1: 106, x2: 330, y2: 130}, {x1: 360, y1: 106, x2: 390, y2: 130},
+                {x1: 480, y1: 106, x2: 450, y2: 130}, {x1: 480, y1: 106, x2: 510, y2: 130},
+                {x1: 50, y1: 146, x2: 30, y2: 170}, {x1: 50, y1: 146, x2: 70, y2: 170},
+                {x1: 110, y1: 146, x2: 110, y2: 170}, {x1: 170, y1: 146, x2: 190, y2: 170},
+                {x1: 230, y1: 146, x2: 230, y2: 170}, {x1: 330, y1: 146, x2: 350, y2: 170},
+                {x1: 390, y1: 146, x2: 390, y2: 170}, {x1: 450, y1: 146, x2: 430, y2: 170},
+                {x1: 510, y1: 146, x2: 510, y2: 170}
+            ];
+
+            connections.forEach((conn, i) => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', conn.x1); line.setAttribute('y1', conn.y1);
+                line.setAttribute('x2', conn.x2); line.setAttribute('y2', conn.y2);
+                line.setAttribute('stroke', '#3f3f46'); line.setAttribute('stroke-width', '2');
+                line.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(line);
+            });
+
+            Object.entries(nodeData).forEach(([letter, pos]) => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x); circle.setAttribute('cy', pos.y); circle.setAttribute('r', '13');
+                circle.setAttribute('fill', letter === 'start' ? '#27262b' : '#18181b');
+                circle.setAttribute('stroke', letter === 'start' ? '#64748b' : '#4ade80');
+                circle.setAttribute('stroke-width', letter === 'start' ? '2' : '2.5');
+                circle.setAttribute('id', `node-${letter}`);
+                if (letter !== 'start') {
+                    circle.style.cursor = 'pointer';
+                    circle.onclick = () => selectLetter(letter);
+                }
+                g.appendChild(circle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x); text.setAttribute('y', pos.y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', letter === 'start' ? '#94a3b8' : '#e2e8f0');
+                text.setAttribute('font-size', letter.length > 3 ? '8' : '11');
+                text.setAttribute('font-weight', '700');
+                text.setAttribute('font-family', 'JetBrains Mono, monospace');
+                text.textContent = letter;
+                text.style.pointerEvents = 'none';
+                g.appendChild(text);
+
+                svg.appendChild(g);
+            });
+        }
+
+        function highlightNode(letter, duration = 1500) {
+            const node = document.getElementById(`node-${letter}`);
+            if (!node) return;
+            node.classList.add('highlight');
+            setTimeout(() => node.classList.remove('highlight'), duration);
+        }
+
+        function highlightCurrentNode(letter) {
+            document.querySelectorAll('.morse-node.current').forEach(el => el.classList.remove('current'));
+            const node = document.getElementById(`node-${letter}`);
+            if (node) node.classList.add('current');
+        }
+
+        function clearCurrentHighlight() {
+            document.querySelectorAll('.morse-node.current').forEach(el => el.classList.remove('current'));
+        }
+
+        function selectLetter(letter) {
+            const morse = MORSE[letter];
+            if (!morse) return;
+            document.getElementById('current-letter').textContent = letter;
+            document.getElementById('current-morse').textContent = morse;
+            highlightNode(letter);
+            playMorse(morse);
+        }
+
         function sendDot() { currentSendCode += '.'; updateSendUI(); navigateTree(currentSendCode); checkAutoDecode(); }
         function sendDash() { currentSendCode += '-'; updateSendUI(); navigateTree(currentSendCode); checkAutoDecode(); }
-        function navigateTree(code) { /* ... */ }
-        function updateSendUI() { /* ... */ }
-        function checkAutoDecode() { /* ... */ }
-        function resetSend() { /* ... */ }
 
-        function encodeText() { /* full implementation */ }
-        function decodeMorse() { /* full implementation */ }
-        function copyMorseOutput() { /* full implementation */ }
-        function playMorseFromOutput() { /* full implementation */ }
+        function navigateTree(code) {
+            let node = '';
+            for (let char of code) {
+                if (!TREE[node]) break;
+                node = (char === '.') ? TREE[node].left : TREE[node].right;
+                if (!node) break;
+            }
+            if (node) {
+                highlightCurrentNode(node);
+                document.getElementById('current-letter').textContent = node;
+            } else {
+                clearCurrentHighlight();
+            }
+        }
 
-        function startPractice() { /* full implementation */ }
-        function generateGuessButtons() { /* full implementation */ }
-        function checkGuess(guessed, btnElement) { /* full implementation */ }
-        function createSimpleConfetti() { /* full implementation */ }
-        function replayPractice() { /* full implementation */ }
+        function updateSendUI() {
+            document.getElementById('current-morse').textContent = currentSendCode || '— — —';
+            if (currentSendCode.length > 0) document.getElementById('current-letter').textContent = '…';
+        }
 
-        // FULL SETTINGS FUNCTIONS
+        function checkAutoDecode() {
+            for (const [letter, code] of Object.entries(MORSE)) {
+                if (code === currentSendCode) {
+                    document.getElementById('current-letter').textContent = letter;
+                    highlightNode(letter, 2000);
+                    setTimeout(() => playMorse(currentSendCode), 90);
+                    return;
+                }
+            }
+        }
+
+        function resetSend() {
+            currentSendCode = '';
+            document.getElementById('current-letter').textContent = '—';
+            document.getElementById('current-morse').textContent = '— — —';
+            clearCurrentHighlight();
+        }
+
+        function encodeText() {
+            const input = document.getElementById('text-input').value.toUpperCase().trim();
+            if (!input) return;
+            let result = '';
+            for (const char of input) {
+                if (MORSE[char]) result += MORSE[char] + ' ';
+                else if (char === ' ') result += ' / ';
+            }
+            document.getElementById('morse-output').innerHTML = result.trim() || 'No valid letters';
+        }
+
+        function decodeMorse() {
+            const input = document.getElementById('text-input').value.trim();
+            if (!input) return;
+            const parts = input.split(/\s+/);
+            let result = '';
+            for (const part of parts) {
+                if (part === '/' || part === '') { result += ' '; continue; }
+                let found = false;
+                for (const [letter, code] of Object.entries(MORSE)) {
+                    if (code === part) { result += letter; found = true; break; }
+                }
+                if (!found) result += '?';
+            }
+            document.getElementById('morse-output').innerHTML = result || 'No match';
+        }
+
+        function copyMorseOutput() {
+            const text = document.getElementById('morse-output').textContent.trim();
+            if (!text || text === 'Your Morse will appear here') return;
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = document.getElementById('morse-output').innerHTML;
+                document.getElementById('morse-output').innerHTML = '✓ Copied!';
+                setTimeout(() => { document.getElementById('morse-output').innerHTML = orig; }, 1100);
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            });
+        }
+
+        function playMorseFromOutput() {
+            const output = document.getElementById('morse-output').textContent.trim();
+            if (!output || output === 'Your Morse will appear here') return;
+            const clean = output.replace(/\//g, ' ').replace(/\s+/g, ' ').trim();
+            const codes = clean.split(' ');
+            let time = 0;
+            codes.forEach(code => {
+                if (!code) return;
+                setTimeout(() => playMorse(code), time);
+                time += (code.length * (dotDuration * 1.25)) + 350;
+            });
+        }
+
+        function startPractice() {
+            const letters = Object.keys(MORSE);
+            currentPracticeLetter = letters[Math.floor(Math.random() * letters.length)];
+            currentPracticeMorse = MORSE[currentPracticeLetter];
+
+            const display = document.getElementById('practice-display');
+            display.textContent = '?';
+            display.style.color = '#27251f';
+            document.getElementById('practice-feedback').innerHTML = '';
+
+            setTimeout(() => playMorse(currentPracticeMorse), 280);
+            generateGuessButtons();
+        }
+
+        function generateGuessButtons() {
+            const container = document.getElementById('guess-grid');
+            container.innerHTML = '';
+            const letters = Object.keys(MORSE);
+            let options = [currentPracticeLetter];
+            while (options.length < 4) {
+                const rand = letters[Math.floor(Math.random() * letters.length)];
+                if (!options.includes(rand)) options.push(rand);
+            }
+            options = options.sort(() => Math.random() - 0.5);
+
+            options.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = `py-3 text-xl font-bold mono bg-zinc-800 hover:bg-zinc-700 active:bg-emerald-600 border border-zinc-700 hover:border-emerald-500 rounded-2xl transition-all`;
+                btn.textContent = letter;
+                btn.onclick = () => checkGuess(letter, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkGuess(guessed, btnElement) {
+            const feedback = document.getElementById('practice-feedback');
+            const allBtns = document.querySelectorAll('#guess-grid button');
+            allBtns.forEach(b => b.disabled = true);
+            const display = document.getElementById('practice-display');
+
+            if (guessed === currentPracticeLetter) {
+                btnElement.classList.add('!bg-emerald-600', '!border-emerald-400', 'text-white');
+                feedback.innerHTML = `<span class="text-emerald-400 font-semibold">✓ PERFECT!</span>`;
+                display.textContent = currentPracticeLetter;
+                display.style.color = '#a1a1aa';
+                highlightNode(currentPracticeLetter, 1300);
+                createSimpleConfetti();
+                setTimeout(() => startPractice(), 1400);
+            } else {
+                btnElement.classList.add('!bg-red-600/70', '!border-red-500');
+                feedback.innerHTML = `<span class="text-red-400">✗ It's <strong>${currentPracticeLetter}</strong></span>`;
+                setTimeout(() => {
+                    allBtns.forEach(b => { if (b.textContent === currentPracticeLetter) b.classList.add('!bg-emerald-600', '!border-emerald-400'); });
+                    display.textContent = currentPracticeLetter;
+                    display.style.color = '#a1a1aa';
+                }, 600);
+                setTimeout(() => startPractice(), 1850);
+            }
+        }
+
+        function createSimpleConfetti() {
+            const colors = ['#10b981', '#4ade80', '#a3e635'];
+            for (let i = 0; i < 24; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'fixed';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.top = '-18px';
+                p.style.width = '6px'; p.style.height = '6px';
+                p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                p.style.zIndex = '9999';
+                p.style.pointerEvents = 'none';
+                p.style.transition = 'transform 1.25s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 1.25s';
+                document.body.appendChild(p);
+
+                const ang = Math.random() * 70 + 50;
+                const vel = Math.random() * 240 + 200;
+                setTimeout(() => { p.style.transform = `translateY(${vel}px) rotate(${ang * 3}deg)`; p.style.opacity = '0'; }, 25);
+                setTimeout(() => p.remove(), 1400);
+            }
+        }
+
+        function replayPractice() {
+            if (currentPracticeMorse) {
+                const display = document.getElementById('practice-display');
+                display.style.color = '#27251f';
+                playMorse(currentPracticeMorse, () => { if (display.textContent !== '?') display.style.color = '#a1a1aa'; });
+            }
+        }
+
         function showSettings() {
             document.getElementById('settings-modal').classList.remove('hidden');
             document.getElementById('settings-modal').classList.add('flex');
@@ -373,15 +665,32 @@
             document.getElementById('freq-display').textContent = pitchHz + 'Hz';
         }
 
-        function switchVersion(ver) { /* ... */ }
-        function setupKeyboard() { /* ... */ }
+        function switchVersion(ver) {
+            if (ver === 'v3') return;
+            if (ver === 'v2') window.location.href = 'https://alexz005.github.io/master-morse-web/';
+            if (ver === 'v1') window.location.href = 'https://github.com/AlexZ005/master-morse-web/tree/main';
+        }
+
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '.' || e.key === ',') { e.preventDefault(); sendDot(); }
+                if (e.key === '-' || e.key === '_') { e.preventDefault(); sendDash(); }
+                if (e.key.toLowerCase() === 'r') resetSend();
+                if (e.key === ' ' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    const m = document.getElementById('current-morse').textContent.trim();
+                    if (m && m !== '— — —') playMorse(m.replace(/ /g, ''));
+                }
+                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); showSettings(); }
+            });
+        }
 
         function initApp() {
             loadSettings();
             createMorseTree();
             setupKeyboard();
             document.getElementById('freq-display').textContent = pitchHz + 'Hz';
-            console.log('%c[v3] Settings fully restored and working', 'color:#166534');
+            console.log('%c[v3] Full tree + settings restored', 'color:#166534');
         }
 
         window.onload = initApp;

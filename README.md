@@ -1,31 +1,19 @@
-# Master Morse Web — v2
+# Master Morse Web v3
 
-**Major update** of the interactive Morse code trainer inspired by the original Flowarmth device.
+**Exact recreation of the Pandora Tech "Language of Dots and Dashes" map** with major UX improvements.
 
-## What's New in v2
+### v3 Highlights
+- ✅ **Pixel-perfect Pandora Tech tree** — every line, position, and letter matches the official image
+- ✅ **Hyper-reactive navigation** — as you tap DOT/DASH the exact current letter lights up live on the tree (yellow glow)
+- ✅ **One-page mobile & foldable optimized** — tree + send buttons + current selection all visible without scrolling on phones and foldables
+- ✅ All previous v2 features kept: Settings (speed/pitch/volume/auto), Copy button, Practice mode (reveal only after guess), confetti, keyboard support
 
-- ✅ **Corrected Morse tree** — accurate connections matching the physical device
-- ✅ **Real-time navigation highlight** — watch the tree light up as you tap DOT/DASH
-- ✅ **Integrated Send controls** — always visible right under the device
-- ✅ **Copy button** for Encode/Decode results
-- ✅ **Fixed Practice mode** — letter revealed **only after** you guess
-- ✅ **Full Settings panel** (gear icon)
-  - Speed (WPM)
-  - Pitch (Hz)
-  - Volume
-  - Auto-play on change
-  - Saved to localStorage + Reset button
-- ✅ **Microphone decoder** — speak or tap Morse into your mic and watch it decode live!
-- ✅ **Version dropdown** in header (ready for future versions)
-
-## Live Demo
+### Live Demo
 https://alexz005.github.io/master-morse-web/
 
-## Keyboard Shortcuts
-- `.` or `,` → DOT
-- `-` or `_` → DASH
-- `R` → Reset path
-- `Space` → Play current Morse
-- `S` → Open Settings
+Use the version dropdown in the header to switch between versions.
 
-Made with ❤️ for Morse enthusiasts. 73!
+Made for serious Morse learners. 73 de AlexZ005
+
+---
+*Deployed automatically — v3 on gh-pages*
